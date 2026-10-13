@@ -47,8 +47,9 @@ jobs:
         shell: bash
         run: |
           set -euxo pipefail
-          yes | sdkmanager --sdk_root="$ANDROID_HOME" --licenses || status=$?
-          if [ "${status:-0}" -ne 0 ] && [ "${status:-0}" -ne 141 ]; then exit "$status"; fi
+          # Use a finite input stream: with pipefail, "yes" exits 141 when sdkmanager closes stdin.
+          # That masked successful license acceptance and failed this step before the actual build.
+          for _ in {1..50}; do printf 'y\n'; done | sdkmanager --sdk_root="$ANDROID_HOME" --licenses
 
       - name: Install Android SDK packages
         shell: bash
