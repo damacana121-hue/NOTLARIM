@@ -1,0 +1,6 @@
+{
+  "name": "Samsung Notes",
+  "description": "Kategori sistemleri, çizim, ses kaydı, transkripsiyon, şifreleme ve PDF aktarımı sunan gelişmiş not alma uygulaması.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
