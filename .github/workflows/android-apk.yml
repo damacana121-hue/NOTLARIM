@@ -16,9 +16,6 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
-    env:
-      ANDROID_HOME: ${{ runner.temp }}/android-sdk
-      ANDROID_SDK_ROOT: ${{ runner.temp }}/android-sdk
     steps:
       - name: Checkout source
         uses: actions/checkout@v4
@@ -33,24 +30,28 @@ jobs:
         shell: bash
         run: |
           set -euxo pipefail
+          export ANDROID_HOME="$RUNNER_TEMP/android-sdk"
+          export ANDROID_SDK_ROOT="$ANDROID_HOME"
           mkdir -p "$ANDROID_HOME/cmdline-tools"
           cd "$RUNNER_TEMP"
           curl -fL --retry 3 --retry-delay 2 -o commandlinetools.zip https://dl.google.com/android/repository/commandlinetools-linux-13114758_latest.zip
           mkdir -p cmdline-tools-unpacked
           unzip -q commandlinetools.zip -d cmdline-tools-unpacked
           mv cmdline-tools-unpacked/cmdline-tools "$ANDROID_HOME/cmdline-tools/latest"
-          echo "$ANDROID_HOME/cmdline-tools/latest/bin" >> "$GITHUB_PATH"
-          echo "$ANDROID_HOME/platform-tools" >> "$GITHUB_PATH"
           echo "ANDROID_HOME=$ANDROID_HOME" >> "$GITHUB_ENV"
           echo "ANDROID_SDK_ROOT=$ANDROID_HOME" >> "$GITHUB_ENV"
+          echo "$ANDROID_HOME/cmdline-tools/latest/bin" >> "$GITHUB_PATH"
+          echo "$ANDROID_HOME/platform-tools" >> "$GITHUB_PATH"
 
       - name: Accept Android SDK licenses
         shell: bash
         run: |
           set -euxo pipefail
-          yes | sdkmanager --sdk_root="$ANDROID_HOME" --licenses || test "$?" -eq 141
+          yes | sdkmanager --sdk_root="$ANDROID_HOME" --licenses || status=$?
+          if [ "${status:-0}" -ne 0 ] && [ "${status:-0}" -ne 141 ]; then exit "$status"; fi
 
       - name: Install Android SDK packages
+        shell: bash
         run: sdkmanager --sdk_root="$ANDROID_HOME" "platform-tools" "platforms;android-36" "build-tools;36.0.0"
 
       - name: Set up Gradle
